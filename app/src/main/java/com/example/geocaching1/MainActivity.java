@@ -13,6 +13,8 @@ import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.maps2d.AMap;
 import com.amap.api.maps2d.CameraUpdateFactory;
 import com.amap.api.maps2d.MapView;
+import com.amap.api.maps2d.model.BitmapDescriptor;
+import com.amap.api.maps2d.model.BitmapDescriptorFactory;
 import com.amap.api.maps2d.model.LatLng;
 import com.amap.api.maps2d.model.MarkerOptions;
 
@@ -36,6 +38,8 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 100;
 
+    // 加载自定义图标（确保 geo_star.png 放在 res/drawable 文件夹下）
+    BitmapDescriptor customIcon;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,9 +55,22 @@ public class MainActivity extends AppCompatActivity {
             aMap = mapView.getMap();
         }
 
+        // 加载自定义图标
+        customIcon = BitmapDescriptorFactory.fromResource(R.drawable.geo_star);
+
         // 检查权限并开始定位
         checkAndRequestLocationPermission();
+
+        // 手动添加北京海淀区的一个标记
+        LatLng haidianLatLng = new LatLng(39.95933, 116.29845);
+        aMap.addMarker(new MarkerOptions()
+                .position(haidianLatLng)
+                .title("海淀区")
+                .snippet("北京市海淀区")
+                .icon(customIcon)); // 使用自定义图标
     }
+
+
 
     private void checkAndRequestLocationPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -83,12 +100,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void startLocation() {
         try {
-//            AMapLocationClientOption option = new AMapLocationClientOption();
-//            option.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy); // 高精度定位模式
-//            option.setOnceLocation(true);  // 只定位一次
-//            option.setNeedAddress(true);   // 返回地址信息
-//            locationClient.setLocationOption(option);
-
             locationClient = new AMapLocationClient(this);
             AMapLocationClientOption option = new AMapLocationClientOption();
             option.setOnceLocation(true); // 只定位一次
@@ -108,10 +119,13 @@ public class MainActivity extends AppCompatActivity {
                         // 在地图上移动相机到当前位置
                         LatLng currentLatLng = new LatLng(latitude, longitude);
                         aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15));
+
+                        // 高德默认的蓝色图标
                         aMap.addMarker(new MarkerOptions()
                                 .position(currentLatLng)
                                 .title("You are here")
-                                .snippet("Latitude: " + latitude + ", Longitude: " + longitude));
+                                .snippet("Latitude: " + latitude + ", Longitude: " + longitude)
+                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))); // 默认蓝色标记
 
                         // 打印位置信息
                         Log.d("LocationInfo", "Latitude: " + latitude + ", Longitude: " + longitude);
@@ -145,7 +159,8 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-//    private void fetchGeocacheData() {
+
+    //    private void fetchGeocacheData() {
 //        new FetchGeocachesTask(this).execute();
 //    }
     private void fetchGeocacheData(double latitude, double longitude) {
@@ -194,24 +209,158 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    private void parseAndShowGeocaches(String json) {
-        try {
-            JSONObject jsonObject = new JSONObject(json);
-            JSONArray results = jsonObject.getJSONArray("results");
+//    private void parseAndShowGeocaches(String json) {
+//        try {
+//            JSONObject jsonObject = new JSONObject(json);
+//            JSONArray results = jsonObject.getJSONArray("results");
+//
+//            for (int i = 0; i < results.length(); i++) {
+//                String geocacheId = results.getString(i);
+//                Log.d("GeocacheFetcher", "Fetching details for ID: " + geocacheId);
+//
+//                // 使用 FetchGeocacheDetailsTask 异步任务
+//                new FetchGeocacheDetailsTask().execute(geocacheId);
+//                // 手动添加北京海淀区的一个标记
+//                LatLng haidianLatLng = new LatLng(39.95933, 116.29845); // 北京海淀区经纬度
+//                aMap.addMarker(new MarkerOptions()
+//                        .position(haidianLatLng)
+//                        .title("海淀区")
+//                        .snippet("手动添加的点")
+//                        .icon(customIcon));
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            Log.e("ParseGeocaches", "Error parsing geocache data: " + e.getMessage());
+//            Toast.makeText(this, "Error parsing geocache data", Toast.LENGTH_SHORT).show();
+//        }
+//    }
+//
+//    private void parseAndShowGeocaches(String json) {
+//        try {
+//            JSONObject jsonObject = new JSONObject(json);
+//            JSONArray results = jsonObject.getJSONArray("results");
+//
+//            // 加载自定义图标
+//            BitmapDescriptor customIcon = BitmapDescriptorFactory.fromResource(R.drawable.geo_star);
+//
+//            for (int i = 0; i < results.length(); i++) {
+//                String geocacheId = results.getString(i);
+//                Log.d("GeocacheFetcher", "Fetching details for ID: " + geocacheId);
+//
+//                // 异步获取详细信息
+//                String geocacheDetails = GeocacheFetcher.fetchGeocacheDetails(geocacheId);
+//                if (geocacheDetails.startsWith("Error") || geocacheDetails.startsWith("Exception")) {
+//                    Log.e("GeocacheDetails", "Failed to fetch details for ID: " + geocacheId);
+//                    continue;
+//                }
+//
+//                // 解析 geocache 详情
+//                JSONObject detailObject = new JSONObject(geocacheDetails);
+//                String location = detailObject.optString("location", "");
+//                String name = detailObject.optString("name", "Unknown");
+//
+//                if (!location.isEmpty()) {
+//                    String[] parts = location.split("\\|");
+//                    double latitude = Double.parseDouble(parts[0]);
+//                    double longitude = Double.parseDouble(parts[1]);
+//
+//                    LatLng latLng = new LatLng(latitude, longitude);
+//
+//                    // 添加带自定义图标的标记到地图上
+//                    aMap.addMarker(new MarkerOptions()
+//                            .position(latLng)
+//                            .title(name)
+//                            .snippet("Geocache ID: " + geocacheId)
+//                            .icon(customIcon));
+//                }
+//            }
+//
+//            // 手动添加北京海淀区的一个标记
+//            LatLng haidianLatLng = new LatLng(39.95933, 116.29845); // 北京海淀区经纬度
+//            aMap.addMarker(new MarkerOptions()
+//                    .position(haidianLatLng)
+//                    .title("海淀区")
+//                    .snippet("手动添加的点")
+//                    .icon(customIcon));
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            Log.e("ParseGeocaches", "Error parsing geocache data: " + e.getMessage());
+//            Toast.makeText(this, "Error parsing geocache data", Toast.LENGTH_SHORT).show();
+//        }
+//    }
+private void parseAndShowGeocaches(String json) {
+    try {
+        JSONObject jsonObject = new JSONObject(json);
+        JSONArray results = jsonObject.getJSONArray("results");
 
-            for (int i = 0; i < results.length(); i++) {
-                String geocacheId = results.getString(i);
-                Log.d("GeocacheFetcher", "Fetching details for ID: " + geocacheId);
+        for (int i = 0; i < results.length(); i++) {
+            String geocacheId = results.getString(i);
+            Log.d("GeocacheFetcher", "Fetching details for ID: " + geocacheId);
 
-                // 异步获取详细信息
-                new FetchGeocacheDetailsTask().execute(geocacheId);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.e("ParseGeocaches", "Error parsing geocache data: " + e.getMessage());
-            Toast.makeText(this, "Error parsing geocache data", Toast.LENGTH_SHORT).show();
+            // 使用异步任务获取详细信息，避免主线程阻塞
+            new FetchGeocacheDetailsTask().execute(geocacheId);
         }
+
+        // 添加北京海淀区的一个标记
+        LatLng haidianLatLng = new LatLng(39.95933, 116.29845); // 北京海淀区经纬度
+        aMap.addMarker(new MarkerOptions()
+                .position(haidianLatLng)
+                .title("海淀区")
+                .snippet("手动添加的点")
+                .icon(customIcon)); // 使用星星图标
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        Log.e("ParseGeocaches", "Error parsing geocache data: " + e.getMessage());
+        Toast.makeText(this, "Error parsing geocache data", Toast.LENGTH_SHORT).show();
     }
+}
+
+
+
+
+//    private class FetchGeocacheDetailsTask extends AsyncTask<String, Void, String> {
+//        private String geocacheId;
+//
+//        @Override
+//        protected String doInBackground(String... params) {
+//            geocacheId = params[0];
+//            return GeocacheFetcher.fetchGeocacheDetails(geocacheId);
+//        }
+//
+//        @Override
+//        protected void onPostExecute(String geocacheDetails) {
+//            if (geocacheDetails == null || geocacheDetails.startsWith("Error") || geocacheDetails.startsWith("Exception")) {
+//                Log.e("GeocacheDetails", "Failed to fetch details for ID: " + geocacheId);
+//                return;
+//            }
+//
+//            try {
+//                JSONObject detailObject = new JSONObject(geocacheDetails);
+//                String location = detailObject.optString("location", "");
+//                String name = detailObject.optString("name", "Unknown");
+//
+//                if (!location.isEmpty()) {
+//                    String[] parts = location.split("\\|");
+//                    double latitude = Double.parseDouble(parts[0]);
+//                    double longitude = Double.parseDouble(parts[1]);
+//
+//                    LatLng latLng = new LatLng(latitude, longitude);
+//
+//                    // 在地图上添加标记
+//                    aMap.addMarker(new MarkerOptions()
+//                            .position(latLng)
+//                            .title(name)
+//                            .snippet("Geocache ID: " + geocacheId)
+//                            .icon(customIcon)); // 使用自定义图标
+//                }
+//            } catch (Exception e) {
+//                Log.e("GeocacheDetails", "Error parsing details: " + e.getMessage());
+//            }
+//        }
+//    }
+//
 
     private class FetchGeocacheDetailsTask extends AsyncTask<String, Void, String> {
         private String geocacheId;
@@ -241,18 +390,18 @@ public class MainActivity extends AppCompatActivity {
 
                     LatLng latLng = new LatLng(latitude, longitude);
 
-                    // 添加标记到地图上
+                    // 使用星星图标添加标记
                     aMap.addMarker(new MarkerOptions()
                             .position(latLng)
                             .title(name)
-                            .snippet("Geocache ID: " + geocacheId));
+                            .snippet("Geocache ID: " + geocacheId)
+                            .icon(customIcon)); // 使用自定义图标
                 }
             } catch (Exception e) {
                 Log.e("GeocacheDetails", "Error parsing details: " + e.getMessage());
             }
         }
     }
-
 
 
     private void showPrivacyDialog() {
