@@ -1,5 +1,7 @@
 package com.example.geocaching1;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.AsyncTask;
 import java.lang.ref.WeakReference;
@@ -18,6 +20,7 @@ import com.amap.api.maps2d.model.BitmapDescriptorFactory;
 import com.amap.api.maps2d.model.LatLng;
 import com.amap.api.maps2d.model.MarkerOptions;
 
+import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -92,8 +95,23 @@ public class MainActivity extends AppCompatActivity {
                 // 权限被授予，开始定位
                 startLocation();
             } else {
-                // 权限被拒绝，显示提示
-                Toast.makeText(this, "定位权限被拒绝，无法获取位置信息", Toast.LENGTH_SHORT).show();
+                if (!ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+                    // 用户选择了“拒绝并不再提示”，引导用户到设置页面手动开启权限
+                    new AlertDialog.Builder(this)
+                            .setTitle("权限被拒绝")
+                            .setMessage("定位权限已被禁用，请前往设置手动开启，以便正常使用地图功能。")
+                            .setPositiveButton("去设置", (dialog, which) -> {
+                                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                                intent.setData(Uri.parse("package:" + getPackageName()));
+                                startActivity(intent);
+                            })
+                            .setNegativeButton("取消", null)
+                            .show();
+                } else {
+                    // 用户仅仅是拒绝权限，但没有选择“不再提示”
+                    Toast.makeText(this, "定位权限被拒绝，部分功能无法使用", Toast.LENGTH_SHORT).show();
+                }
+
             }
         }
     }
