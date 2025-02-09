@@ -42,6 +42,7 @@ import java.io.IOException;
 public class LoginActivity extends AppCompatActivity {
 
     private static final String LOGIN_URL = "http://10.0.2.2:8080/api/users/login";  // 你的后端登录接口
+
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
     @Override
@@ -71,7 +72,7 @@ public class LoginActivity extends AppCompatActivity {
     private void loginUser(String username, String password) {
         Log.d(TAG, "Attempting to log in with username: " + username);  // 用户名
         OkHttpClient client = ApiClient.getUnsafeOkHttpClient();  // 获取不验证 SSL 的客户端
-
+        Log.d(TAG, "进行了okhttpclient" );
         JSONObject json = new JSONObject();
         try {
             json.put("username", username);

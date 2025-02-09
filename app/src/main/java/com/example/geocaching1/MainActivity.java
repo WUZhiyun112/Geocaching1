@@ -1,5 +1,6 @@
 package com.example.geocaching1;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -7,6 +8,7 @@ import android.os.AsyncTask;
 import java.lang.ref.WeakReference;
 
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -19,9 +21,11 @@ import com.amap.api.maps2d.model.BitmapDescriptor;
 import com.amap.api.maps2d.model.BitmapDescriptorFactory;
 import com.amap.api.maps2d.model.LatLng;
 import com.amap.api.maps2d.model.MarkerOptions;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import android.provider.Settings;
 import android.util.Log;
+import android.view.MenuItem;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -44,11 +48,34 @@ public class MainActivity extends AppCompatActivity {
     // 加载自定义图标（确保 geo_star.png 放在 res/drawable 文件夹下）
     BitmapDescriptor customIcon;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         showPrivacyDialog();
+
+        BottomNavigationView navView = findViewById(R.id.bottom_navigation);
+        navView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+            @SuppressLint("NonConstantResourceId")
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                int id = item.getItemId();
+                if (id == R.id.navigation_home) {
+                    // 切换到主页
+                    return true;
+                } else if (id == R.id.navigation_dashboard) {
+                    // 切换到信息页
+                    return true;
+                } else if (id == R.id.navigation_notifications) {
+                    // 切换到个人中心
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+
+        });
 
         // 初始化地图视图
         mapView = findViewById(R.id.map);
@@ -72,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
                 .snippet("北京市海淀区")
                 .icon(customIcon)); // 使用自定义图标
     }
+
 
 
 

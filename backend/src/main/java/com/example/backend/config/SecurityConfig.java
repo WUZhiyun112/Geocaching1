@@ -48,7 +48,8 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
             .authorizeHttpRequests(authz -> authz
                     .requestMatchers("/api/users/register", "/api/users/login").permitAll()
                     .requestMatchers("/error").permitAll() // 允许错误页面路径不认证// Allow register/login without authentication
-                    .anyRequest().authenticated()  // Requires authentication for other requests
+                    .anyRequest().authenticated()  // Requir./gradlew bootRun
+                    //es authentication for other requests
             )
             .sessionManagement(session -> session
                     .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)  // Enable session management, create session if needed

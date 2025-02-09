@@ -47,6 +47,10 @@ import java.util.Date;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 
 @RestController
 @RequestMapping("/api/users")
@@ -58,6 +62,8 @@ public class UserController {
     @Autowired
     private PasswordEncoder passwordEncoder;
     private String secretKey = "5DS6EbEc493q9CS6sOR+z1Ok+O9nhUMGzo/7evUn7qo=";
+
+    private static final Logger log = LoggerFactory.getLogger(UserController.class);
 
 
 //    @PostMapping("/register")
@@ -77,6 +83,7 @@ public class UserController {
 //    }
     @PostMapping("/register")
     public ResponseEntity<String> registerUser(@RequestBody UserDto userDto) {
+        log.debug("register attempt for user: ");
         // 公共验证逻辑
         ResponseEntity<String> validationResponse = validateUserDetails(userDto);
         if (validationResponse != null) return validationResponse;
@@ -86,12 +93,21 @@ public class UserController {
         return ResponseEntity.ok("User registered successfully");
     }
 
+
     @PostMapping("/login")
     public ResponseEntity<String> loginUser(@RequestBody UserDto userDto) {
+        log.debug("Login attempt for user: {}", userDto.getUsername());
         return userService.authenticateUser(userDto.getUsername(), userDto.getPassword())
-                .map(validUser -> ResponseEntity.ok("Login successful. Token: " + generateJwtToken(validUser)))
-                .orElseGet(() -> ResponseEntity.status(401).body("Invalid credentials"));
+                .map(validUser -> {
+                    log.debug("Login successful for user: {}", userDto.getUsername());
+                    return ResponseEntity.ok("Login successful. Token: " + generateJwtToken(validUser));
+                })
+                .orElseGet(() -> {
+                    log.debug("Invalid credentials provided for user: {}", userDto.getUsername());
+                    return ResponseEntity.status(401).body("Invalid credentials");
+                });
     }
+
 
     private ResponseEntity<String> validateUserDetails(UserDto userDto) {
         if (userService.findUserByUsername(userDto.getUsername()).isPresent()) {
