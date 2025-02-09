@@ -61,19 +61,24 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 int id = item.getItemId();
+
                 if (id == R.id.navigation_home) {
-                    // 切换到主页
+                    Intent intent = new Intent(MainActivity.this, MainActivity.class); // 使用 MainActivity.this 而不是 this
+                    startActivity(intent);
                     return true;
                 } else if (id == R.id.navigation_dashboard) {
-                    // 切换到信息页
+//                    Intent intent = new Intent(MainActivity.this, DashboardActivity.class); // 假设 DashboardActivity 是另一个界面
+//                    startActivity(intent);
                     return true;
                 } else if (id == R.id.navigation_notifications) {
-                    // 切换到个人中心
+                    Intent intent = new Intent(MainActivity.this, SelfActivity.class); // 假设 SelfActivity 是个人中心界面
+                    startActivity(intent);
                     return true;
                 } else {
                     return false;
                 }
             }
+
 
         });
 

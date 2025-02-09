@@ -47,7 +47,8 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
             .csrf(csrf -> csrf.disable())  // Disable CSRF for API
             .authorizeHttpRequests(authz -> authz
                     .requestMatchers("/api/users/register", "/api/users/login").permitAll()
-                    .requestMatchers("/error").permitAll() // 允许错误页面路径不认证// Allow register/login without authentication
+                    .requestMatchers("/error").permitAll()
+                    .requestMatchers("/api/users/verify").permitAll()  // 允许错误页面路径不认证// Allow register/login without authentication
                     .anyRequest().authenticated()  // Requir./gradlew bootRun
                     //es authentication for other requests
             )

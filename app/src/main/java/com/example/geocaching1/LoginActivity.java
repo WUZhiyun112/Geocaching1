@@ -53,6 +53,7 @@ public class LoginActivity extends AppCompatActivity {
         EditText usernameField = findViewById(R.id.username);
         EditText passwordField = findViewById(R.id.password);
         Button loginButton = findViewById(R.id.button_confirm);
+        Button forgotPasswordButton = findViewById(R.id.button_forgot_password);
 
         loginButton.setOnClickListener(v -> {
             String username = usernameField.getText().toString().trim();
@@ -67,6 +68,10 @@ public class LoginActivity extends AppCompatActivity {
             // 调用登录方法
             loginUser(username, password);
         });
+        forgotPasswordButton.setOnClickListener(v -> {
+            startActivity(new Intent(LoginActivity.this, ForgotPasswordActivity.class));
+        });
+
     }
 
     private void loginUser(String username, String password) {
@@ -100,40 +105,40 @@ public class LoginActivity extends AppCompatActivity {
                 });
             }
 
-            @Override
             public void onResponse(Call call, Response response) throws IOException {
-                Log.d(TAG, "Response received, code: " + response.code());  // 响应状态码
+                Log.d(TAG, "Response received, code: " + response.code());
                 if (response.isSuccessful()) {
                     String responseBody = response.body().string();
-                    Log.d(TAG, "Response body: " + responseBody);  // 响应体
+                    Log.d(TAG, "Response body: " + responseBody);
 
                     try {
                         JSONObject responseJson = new JSONObject(responseBody);
-                        boolean success = responseJson.getBoolean("success");
+                        String token = responseJson.getString("token");
+                        String username = responseJson.getString("username");
+                        String email = responseJson.getString("email");
 
-                        if (success) {
-                            runOnUiThread(() -> {
-                                Toast.makeText(LoginActivity.this, "登录成功！", Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                                startActivity(intent);
-                                finish();
-                            });
-                        } else {
-                            runOnUiThread(() -> {
-                                Toast.makeText(LoginActivity.this, "用户名或密码错误", Toast.LENGTH_SHORT).show();
-                            });
-                        }
+                        runOnUiThread(() -> {
+                            Toast.makeText(LoginActivity.this, "登录成功！", Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                            intent.putExtra("TOKEN", token);
+                            intent.putExtra("USERNAME", username);
+                            intent.putExtra("EMAIL", email);
+                            startActivity(intent);
+                            finish();
+                        });
                     } catch (JSONException e) {
-                        Log.e(TAG, "Error parsing response JSON", e);  // 解析错误
+                        Log.e(TAG, "Error parsing response JSON", e);
                         e.printStackTrace();
                     }
                 } else {
-                    Log.e(TAG, "Login failed with code: " + response.code());  // 登录失败
+                    Log.e(TAG, "Login failed with code: " + response.code());
                     runOnUiThread(() -> {
                         Toast.makeText(LoginActivity.this, "登录失败，请重试！", Toast.LENGTH_SHORT).show();
                     });
                 }
             }
+
+
         });
     }
 
