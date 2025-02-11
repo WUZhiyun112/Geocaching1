@@ -1,37 +1,4 @@
-//package com.example.backend.controller;
-//
-//import com.example.backend.entity.User;
-//import com.example.backend.service.UserService;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.http.ResponseEntity;
-//import org.springframework.web.bind.annotation.*;
-//
-//@RestController
-//@RequestMapping("/api/users")
-//public class UserController {
-//
-//    @Autowired
-//    private UserService userService;
-//
-//    @PostMapping("/register")
-//    public ResponseEntity<String> registerUser(@RequestBody User user) {
-//        if (userService.findUserByUsername(user.getUsername()).isPresent()) {
-//            return ResponseEntity.badRequest().body("Username already exists");
-//        }
-//        if (userService.findUserByEmail(user.getEmail()).isPresent()) {
-//            return ResponseEntity.badRequest().body("Email already exists");
-//        }
-//        userService.saveUser(user);
-//        return ResponseEntity.ok("User registered successfully");
-//    }
-//
-//    @PostMapping("/login")
-//    public ResponseEntity<String> loginUser(@RequestBody User user) {
-//        return userService.authenticateUser(user)
-//                .map(jwt -> ResponseEntity.ok("Login successful. Token: " + jwt))
-//                .orElseGet(() -> ResponseEntity.status(401).body("Invalid credentials"));
-//    }
-//}
+
 //
 package com.example.backend.controller;
 
@@ -39,10 +6,14 @@ import com.example.backend.dto.UserDto;
 import com.example.backend.dto.UserResponse;
 import com.example.backend.entity.User;
 import com.example.backend.service.UserService;
+import com.example.backend.service.TokenService;
 import com.example.backend.repository.UserRepository;
+
+import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -63,6 +34,8 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    private TokenService tokenService;
     private UserRepository userRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -120,6 +93,22 @@ public ResponseEntity<UserResponse> loginUser(@RequestBody UserDto userDto) {
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new UserResponse(false, "Invalid credentials", null, null, null));
         }
+    }
+
+    @GetMapping("/api/users/details")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UserResponse> getUserDetails(@RequestHeader("Authorization") String token) {
+        String username = tokenService.getUsernameFromToken(token.substring(7)); // Assuming token prefix "Bearer "
+        if (username == null) {
+            return ResponseEntity.status(401).body(new UserResponse(false, "Invalid token", null, null, null));
+        }
+
+        User user = userService.findUserByUsername(username).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(404).body(new UserResponse(false, "User not found", null, null, null));
+        }
+
+        return ResponseEntity.ok(new UserResponse(true, "User details fetched successfully", null, user.getUsername(), user.getEmail()));
     }
 
 

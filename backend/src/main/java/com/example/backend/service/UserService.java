@@ -94,37 +94,17 @@ public class UserService {
     }
 
 
-//    public ResponseEntity<Map<String, Object>> authenticateUser(String username, String password) {
-//        Optional<User> userOpt = userRepository.findByUsername(username);
-//        if (!userOpt.isPresent()) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Username does not exist"));
-//        }
-//
-//        User user = userOpt.get();
-//        boolean passwordMatches = passwordEncoder.matches(password, user.getPasswordHash());
-//        if (!passwordMatches) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Invalid credentials"));
-//        }
-//
-//        String token = generateToken(user.getUsername());
-//        Map<String, Object> response = new HashMap<>();
-//        response.put("token", token);
-//        response.put("username", user.getUsername());
-//        response.put("email", user.getEmail());
-//        return ResponseEntity.ok(response);
-//    }
-
-
-
-//    public String generateToken(String username) {
-//        log.debug("Generating JWT token for username: {}", username);
-//        String token = Jwts.builder()
-//                .setSubject(username)
-//                .signWith(SignatureAlgorithm.HS512, SECRET_KEY)
-//                .compact();
-//        log.debug("Token generated: {}", token);
-//        return token;
-//    }
-
-
+    public UserResponse getUserInfo(String token) {
+        String username = tokenService.getUsernameFromToken(token);
+        if (username != null) {
+            Optional<User> userOpt = userRepository.findByUsername(username);
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                return new UserResponse(true, "User details fetched successfully.", null, user.getUsername(), user.getEmail());
+            }
+        }
+        return new UserResponse(false, "User not found", null, null, null);
+    }
 }
+
+

@@ -13,42 +13,34 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
+import com.example.backend.service.TokenService;
 import java.util.Arrays;
-
+import com.example.backend.config.JwtAuthenticationFilter;
 import jakarta.annotation.PostConstruct;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+    private TokenService tokenService;
 
-//    @Bean
-//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-//        http
-//                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-//                .csrf(csrf -> csrf.disable())
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers(HttpMethod.POST, "/api/users/register").permitAll()
-//                        .requestMatchers(HttpMethod.POST, "/api/users/login").permitAll()
-//                        .anyRequest().authenticated()
-//                )
-//                .sessionManagement(session -> session.disable())
-//                .formLogin(form -> form.disable());
-//
-//        return http.build();
-//    }
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(tokenService);  // 确保TokenService被注入
+    }
 @Bean
 public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
+            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
             .cors(withDefaults())  // CORS configuration
             .csrf(csrf -> csrf.disable())  // Disable CSRF for API
             .authorizeHttpRequests(authz -> authz
                     .requestMatchers("/api/users/register", "/api/users/login").permitAll()
                     .requestMatchers("/error").permitAll()
-                    .requestMatchers("/api/users/verify").permitAll()  // 允许错误页面路径不认证// Allow register/login without authentication
+                    .requestMatchers("/api/users/verify").permitAll()
+                            .requestMatchers("/api/users/details").permitAll()  // 允许错误页面路径不认证// Allow register/login without authentication
                     .anyRequest().authenticated()  // Requir./gradlew bootRun
                     //es authentication for other requests
             )
@@ -74,6 +66,7 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
         source.registerCorsConfiguration("/**", config);
         return source;
     }
+
 
 
 

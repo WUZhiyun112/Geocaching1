@@ -2,6 +2,7 @@ package com.example.geocaching1;
 
 import static android.content.ContentValues.TAG;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -77,7 +78,7 @@ public class LoginActivity extends AppCompatActivity {
     private void loginUser(String username, String password) {
         Log.d(TAG, "Attempting to log in with username: " + username);  // 用户名
         OkHttpClient client = ApiClient.getUnsafeOkHttpClient();  // 获取不验证 SSL 的客户端
-        Log.d(TAG, "进行了okhttpclient" );
+        Log.d(TAG, "进行了okhttpclient");
         JSONObject json = new JSONObject();
         try {
             json.put("username", username);
@@ -117,6 +118,8 @@ public class LoginActivity extends AppCompatActivity {
                         String username = responseJson.getString("username");
                         String email = responseJson.getString("email");
 
+                        saveLoginInfo(token, username, email);
+
                         runOnUiThread(() -> {
                             Toast.makeText(LoginActivity.this, "登录成功！", Toast.LENGTH_SHORT).show();
                             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
@@ -142,4 +145,13 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
+    private void saveLoginInfo(String token, String username, String email) {
+        SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("JWT_TOKEN", token);
+        editor.putString("USERNAME", username);
+        editor.putString("EMAIL", email);
+        editor.apply();
+    }
 }
+
