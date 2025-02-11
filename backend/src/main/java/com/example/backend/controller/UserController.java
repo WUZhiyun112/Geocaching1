@@ -1,37 +1,4 @@
-//package com.example.backend.controller;
-//
-//import com.example.backend.entity.User;
-//import com.example.backend.service.UserService;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.http.ResponseEntity;
-//import org.springframework.web.bind.annotation.*;
-//
-//@RestController
-//@RequestMapping("/api/users")
-//public class UserController {
-//
-//    @Autowired
-//    private UserService userService;
-//
-//    @PostMapping("/register")
-//    public ResponseEntity<String> registerUser(@RequestBody User user) {
-//        if (userService.findUserByUsername(user.getUsername()).isPresent()) {
-//            return ResponseEntity.badRequest().body("Username already exists");
-//        }
-//        if (userService.findUserByEmail(user.getEmail()).isPresent()) {
-//            return ResponseEntity.badRequest().body("Email already exists");
-//        }
-//        userService.saveUser(user);
-//        return ResponseEntity.ok("User registered successfully");
-//    }
-//
-//    @PostMapping("/login")
-//    public ResponseEntity<String> loginUser(@RequestBody User user) {
-//        return userService.authenticateUser(user)
-//                .map(jwt -> ResponseEntity.ok("Login successful. Token: " + jwt))
-//                .orElseGet(() -> ResponseEntity.status(401).body("Invalid credentials"));
-//    }
-//}
+
 //
 package com.example.backend.controller;
 
@@ -39,10 +6,14 @@ import com.example.backend.dto.UserDto;
 import com.example.backend.dto.UserResponse;
 import com.example.backend.entity.User;
 import com.example.backend.service.UserService;
+import com.example.backend.service.TokenService;
 import com.example.backend.repository.UserRepository;
+
+import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -61,11 +32,18 @@ import org.slf4j.LoggerFactory;
 @CrossOrigin(origins = "http://10.0.2.2:8080")
 public class UserController {
 
+    private final UserService userService;
+    private final TokenService tokenService;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
     @Autowired
-    private UserService userService;
-    private UserRepository userRepository;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public UserController(UserService userService, TokenService tokenService, UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userService = userService;
+        this.tokenService = tokenService;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
     private String secretKey = "5DS6EbEc493q9CS6sOR+z1Ok+O9nhUMGzo/7evUn7qo=";
 
     private static final Logger log = LoggerFactory.getLogger(UserController.class);
@@ -112,7 +90,7 @@ public ResponseEntity<UserResponse> loginUser(@RequestBody UserDto userDto) {
     }
     return ResponseEntity.ok(response);
 }
-    @PostMapping("/users/verify")
+    @PostMapping("/verify")
     public ResponseEntity<UserResponse> verifyUserCredentials(@RequestBody UserDto userDto) {
         Optional<User> userOpt = userRepository.findByUsernameAndEmail(userDto.getUsername(), userDto.getEmail());
         if (userOpt.isPresent()) {
@@ -122,6 +100,28 @@ public ResponseEntity<UserResponse> loginUser(@RequestBody UserDto userDto) {
         }
     }
 
+    @GetMapping("/details")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UserResponse> getUserDetails(@RequestHeader("Authorization") String token) {
+        try {
+            String username = tokenService.getUsernameFromToken(token.substring(7)); // Assuming token prefix "Bearer "
+            if (username == null) {
+                return ResponseEntity.status(401).body(new UserResponse(false, "Invalid token", null, null, null));
+            }
+
+            User user = userService.findUserByUsername(username).orElse(null);
+            if (user == null) {
+                return ResponseEntity.status(404).body(new UserResponse(false, "User not found", null, null, null));
+            }
+
+            return ResponseEntity.ok(new UserResponse(true, "User details fetched successfully", null, user.getUsername(), user.getEmail()));
+        } catch (Exception e) {
+            // Log the exception details
+            log.error("Error retrieving user details: ", e);
+            // Return a generic error response
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new UserResponse(false, "Internal Server Error", null, null, null));
+        }
+    }
 
 
 
