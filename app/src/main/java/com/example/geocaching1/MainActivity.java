@@ -67,8 +67,8 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(intent);
                     return true;
                 } else if (id == R.id.navigation_dashboard) {
-//                    Intent intent = new Intent(MainActivity.this, DashboardActivity.class); // 假设 DashboardActivity 是另一个界面
-//                    startActivity(intent);
+                    Intent intent = new Intent(MainActivity.this, DashboardActivity.class); // 假设 DashboardActivity 是另一个界面
+                    startActivity(intent);
                     return true;
                 } else if (id == R.id.navigation_notifications) {
                     Intent intent = new Intent(MainActivity.this, SelfActivity.class); // 假设 SelfActivity 是个人中心界面
